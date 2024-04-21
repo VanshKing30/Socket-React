@@ -1,52 +1,100 @@
-
-import io from "socket.io-client";
-import { useEffect , useState } from 'react';
-
-
-const socket = io.connect('http://localhost:5173');
-function App() {
+import { useEffect , useState , useMemo } from "react";
+import {io} from "socket.io-client";
 
 
+const App = () =>{
+
+  const socket = useMemo(
+    ()=>
+    io("http://localhost:3000" , {
+      withCredentials : true,
+    }),
+    []
+  );
+
+
+  const [messages , setMessages] = useState("");
+  const [message , setMessage] = useState("");
   const [room , setRoom] = useState("");
+  const [socketID , setSocketID] = useState("");
+  const [roomName , setRoomName] = useState("");
 
-  const[message , setMessage] = useState("");
-  const [messageRecieved , setMessageRecieved] = useState("");
-  
-  const joinRoom = () =>{
-    if(room !== ""){
-      socket.emit("join-room" , room);
-    }
+  const handleSubmit = (e) =>{
+    e.preventDefault();
+    socket.emit("message" , {message , room});
+    setMessage("");
   };
 
-  const sendMessage = () =>{
-    socket.emit("send-message" , {message , room});
+  const joinRoomHandler = (e) =>{
+    e.preventDefault();
+    socket.emit("join-room" , roomName);
+    setRoomName("");
   }
 
-  useEffect(()=>{
+  useEffect(() => {
+    socket.on("connect" , ()=>{
+      setSocketID(socket.id);
+      console.log("connected" , socket.id);
+    });
+
     socket.on("recieve-message" , (data)=>{
-      setMessageRecieved(data.message);
-    })
-  } , [socket]);
-  return (
-    <div className="App">
-      <input
-        placeholder="Room Number..."
-        onChange={(event) => {
-          setRoom(event.target.value);
-        }}
-      />
-      <button onClick={joinRoom}> Join Room</button>
-      <input
-        placeholder="Message..."
-        onChange={(event) => {
-          setMessage(event.target.value);
-        }}
-      />
-      <button onClick={sendMessage}> Send Message</button>
-      <h1> Message:</h1>
-      {messageRecieved}
+      console.log(data);
+      setMessages((messages) => [...messages , data]);
+    });
+
+    socket.on("welcome" , (s)=>{
+      console.log(s);
+    });
+
+    return ()=>{
+      socket.disconnect();
+    };
+  } , []);
+
+
+  return(
+    <div>
+
+      <div><h3>{socketID}</h3></div>
+
+
+      <form onSubmit={joinRoomHandler}>
+        <h5>Join Room</h5>
+        <input 
+        type="text"
+        value={roomName}
+        placeholder="Enter room id"
+        onChange={(e)=> setRoomName(e.target.value)}
+        label = "Room Name" />
+
+        <button type="submit">Join</button>
+      </form>
+
+      <form onSubmit={handleSubmit}>
+        <input 
+        type="text"
+        value={message} 
+        onChange={(e)=>setMessage(e.target.value)}
+        label ="outlined"/>
+
+        <input type="text"
+        value={room}
+        onChange={(e)=>setRoom(e.target.value)}
+        label = "Room" />
+
+        <button type="submit">Send</button>
+      </form>
+
+      {/* <div>
+        {messages.map((m , i) => (
+          <p>{m}</p>
+        ))}
+      </div> */}
     </div>
   )
-}
 
-export default App
+
+};
+
+
+export default App;

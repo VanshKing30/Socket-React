@@ -1,13 +1,13 @@
-const express = require('express');
+const express = require("express");
 const {Server} = require("socket.io");
-const {CreateServer} = require('http');
+const {createServer} = require("node:http");
 const cors  = require("cors");
 
 const PORT = 3000;
 
 const app = express();
 
-const server = CreateServer(app);
+const server = createServer(app);
 
 const io = new Server (server , {
     cors : {
@@ -45,8 +45,8 @@ io.on("connection" , (socket) =>{
     });
 });
 
-app.listen(port , ()=>{
-    console.log(`server is active on port ${port}`);
+app.listen(PORT , ()=>{
+    console.log(`server is active on port ${PORT}`);
 });
 
 
