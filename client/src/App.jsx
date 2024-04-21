@@ -14,16 +14,16 @@ function App() {
   
   const joinRoom = () =>{
     if(room !== ""){
-      socket.emit("join_room" , room);
+      socket.emit("join-room" , room);
     }
   };
 
   const sendMessage = () =>{
-    socket.emit("send_message" , {message , room});
+    socket.emit("send-message" , {message , room});
   }
 
   useEffect(()=>{
-    socket.on("recieve_message" , (data)=>{
+    socket.on("recieve-message" , (data)=>{
       setMessageRecieved(data.message);
     })
   } , [socket]);

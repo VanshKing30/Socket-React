@@ -1,33 +1,57 @@
 const express = require('express');
+const {Server} = require("socket.io");
+const {CreateServer} = require('http');
+const cors  = require("cors");
+
+const PORT = 3000;
+
 const app = express();
-const {createServer } = require('node:http');
-const {Server } = require('socket.io');
-const cors = require('cors');
 
+const server = CreateServer(app);
 
-app.use(cors());
-
-const server = createServer(app);
-
-const io = new Server(server , {
+const io = new Server (server , {
     cors : {
         origin : "http://localhost:5173",
-        methods : ['GET' , 'POST'],
+        methods : ["GET" , "POST"],
+        credentials : true,
     },
 });
 
-io.on('connection' , (socket) =>{
-    console.log(`User connected : ${socket.id}`);
 
-    socket.on("join_room" , (data)=>{
-        socket.join(data);
+app.use(
+    cors({
+      origin: "http://localhost:5173",
+      methods: ["GET", "POST"],
+      credentials: true,
+    })
+  );
+
+
+io.on("connection" , (socket) =>{
+    console.log("User Connected" , socket.id);
+
+    socket.on("message" , ({room , message}) =>{
+        console.log({room , message});
+        socket.to(room).emit("receive-message" , message);
     });
 
-    socket.on("send_message" , (data)=>{
-        socket.to(data.room).emit('recieve_message' , data);
+    socket.on("join-room" , (room) =>{
+        socket.join(room);
+        console.log(`User joined room ${room}`);
+    });
+
+    socket.on("disconnect" , ()=>{
+        console.log("User Disconnected" , socket.id);
     });
 });
 
-app.listen(3000 , ()=>{
-    console.log("server is active");
-})
+app.listen(port , ()=>{
+    console.log(`server is active on port ${port}`);
+});
+
+
+
+
+
+
+
